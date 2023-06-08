@@ -1,0 +1,69 @@
+enum loginType {
+  email
+  phoneNo
+}
+
+extend type Account {
+  legacyUsername: String
+  type: loginType
+}
+
+extend input CreateUserInput {
+  username: String = "insecure"
+  legacyUsername: String
+  type: loginType
+  phoneVerified: Boolean = false
+}
+
+input VerifyUserOtpInput {
+  userId: ID!
+  otp: Int!
+}
+
+type CreateUserResult {
+  type: loginType
+}
+
+type newUserResult {
+  userId: ID
+  type: loginType
+}
+
+type resetPasswordResult {
+  userId: ID
+  success: Boolean
+}
+
+input LoginUserInput {
+  email: String
+  password: String!
+  username: String
+}
+
+input ResetpasswordInput {
+  type: loginType!
+  emailPhone: String!
+}
+
+input resetPasswordOtpVerifyInput {
+  otp: Int!
+  userId: ID!
+  password: String!
+}
+
+extend type Mutation {
+  # checkUserExist(phone: String, email: String): Boolean
+  # sendOTP(phone: String, email: String): Boolean
+
+  createUserWithOtp(user: CreateUserInput!): newUserResult
+  verifyOTPSignUp(user: VerifyUserOtpInput!): Boolean
+  loginUser(user: LoginUserInput!): CreateUserResult
+  resetPasswordOtp(user: ResetpasswordInput!): resetPasswordResult
+  resetPasswordOtpVerify(user: resetPasswordOtpVerifyInput!): Boolean
+  # verifyOTP(phone: String, otp: String): verifyOTPResponse
+
+  # authenticateWithOTP(
+  #   serviceName: String!
+  #   params: AuthenticateParamsInput!
+  # ): LoginResult
+}
