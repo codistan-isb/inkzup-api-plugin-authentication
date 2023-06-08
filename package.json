@@ -1,5 +1,5 @@
 {
-  "name": "@jctautologistics/jctautologistics-api-plugin-authentication",
+  "name": "@reactioncommerce/jctautologistics-api-plugin-authentication",
   "description": "Boilerplate Example plugin for the Reaction API",
   "label": "Jctautologistics Api Plugin Authentication",
   "version": "0.0.0-development",
