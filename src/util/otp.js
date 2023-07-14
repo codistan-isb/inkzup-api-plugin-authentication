@@ -94,7 +94,7 @@ export async function sendEmailOTP(
     fromShop: shop,
     templateName: bodyTemplate,
     language,
-    to: "awahab1116@gmail.com",
+    to: email,
   });
 }
 
