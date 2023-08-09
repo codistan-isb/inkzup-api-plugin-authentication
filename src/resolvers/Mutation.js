@@ -129,6 +129,7 @@ export default {
         state: "new",
         userId: userId,
         isDeleted: false,
+        type: user.type,
       };
       const accountAdded = await Accounts.insertOne(account);
 
@@ -155,7 +156,7 @@ export default {
   async verifyOTPSignUp(_, { user }, ctx) {
     // const { serviceName, params } = args;
     const { injector, infos, collections } = ctx;
-    const { users } = collections;
+    const { users, Accounts } = collections;
 
     //checking if account is deleted or not
     const checkedAccount = await ctx.mutations.deleteAccountCheck(ctx, {
@@ -203,6 +204,14 @@ export default {
               updateOtp,
               options
             );
+
+            const { result: accountResult } = await Accounts.updateOne(
+              { _id: userObj._id },
+              updateOtp,
+              options
+            );
+
+            console.log("Accounts Result is ", accountResult);
 
             return result.n;
           } else {
