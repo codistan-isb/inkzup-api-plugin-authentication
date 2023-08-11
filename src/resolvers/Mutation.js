@@ -128,6 +128,8 @@ export default {
         shopId: null,
         state: "new",
         userId: userId,
+        isDeleted: false,
+        type: user.type,
       };
       const accountAdded = await Accounts.insertOne(account);
 
@@ -154,7 +156,12 @@ export default {
   async verifyOTPSignUp(_, { user }, ctx) {
     // const { serviceName, params } = args;
     const { injector, infos, collections } = ctx;
-    const { users } = collections;
+    const { users, Accounts } = collections;
+
+    //checking if account is deleted or not
+    const checkedAccount = await ctx.mutations.deleteAccountCheck(ctx, {
+      userId: user.userId,
+    });
 
     if (!user.userId) {
       throw new ReactionError(
@@ -197,6 +204,14 @@ export default {
               updateOtp,
               options
             );
+
+            const { result: accountResult } = await Accounts.updateOne(
+              { _id: userObj._id },
+              updateOtp,
+              options
+            );
+
+            console.log("Accounts Result is ", accountResult);
 
             return result.n;
           } else {
@@ -250,6 +265,11 @@ export default {
     if (!userData) {
       throw new ReactionError("not-found", "Account not found");
     }
+
+    //checking if account is deleted or not
+    const checkedAccount = await ctx.mutations.deleteAccountCheck(ctx, {
+      userId: userData._id,
+    });
 
     if (!accountsServer.options.enableAutologin) {
       return {
@@ -307,11 +327,6 @@ export default {
     return {
       loginResult: authenticated,
     };
-
-    try {
-    } catch (err) {
-      return err;
-    }
   },
 
   async resetPasswordOtp(_, { user }, ctx) {
@@ -339,6 +354,11 @@ export default {
       throw new ReactionError("not-found", "Account not found");
     }
 
+    //checking if account is deleted or not
+    const checkedAccount = await ctx.mutations.deleteAccountCheck(ctx, {
+      userId: userData._id,
+    });
+
     let data = await genericOtpFunc(userData, ctx);
 
     if (data) {
@@ -358,6 +378,8 @@ export default {
     const { users } = collections;
     const salt = bcrypt.genSaltSync();
 
+    console.log("in reset password otp verify");
+
     if (!user.userId) {
       throw new ReactionError(
         "invalid-parameter",
@@ -372,91 +394,93 @@ export default {
       );
     }
 
-    try {
-      console.log("User Id is ", user);
-      const userObj = await users.findOne({ _id: user.userId });
-      console.log("User Id is ", userObj);
+    //checking if account is deleted or not
+    const checkedAccount = await ctx.mutations.deleteAccountCheck(ctx, {
+      userId: user.userId,
+    });
 
-      if (userObj) {
-        if (userObj.otp === user.otp) {
-          console.log("Same otp now check expiration date");
+    console.log("User Id is ", user);
+    const userObj = await users.findOne({ _id: user.userId });
+    console.log("User Id is ", userObj);
 
-          const expirationTime = new Date().getTime() + 15 * 60 * 1000;
+    if (userObj) {
+      if (userObj.otp === user.otp) {
+        console.log("Same otp now check expiration date");
 
-          // Check if the OTP is still valid
-          const isOtpValid = expirationTime > new Date().getTime();
-          console.log("isOtpValid ", isOtpValid);
-          // Use the value of isOtpValid to perform further actions, for example:
-          if (isOtpValid) {
-            console.log("OTP is still valid");
-            let updateOtp;
-            const options = { new: true };
+        const expirationTime = new Date().getTime() + 15 * 60 * 1000;
 
-            console.log(
-              "createdUser.services.password.bcrypt ",
-              userObj.services.password.bcrypt
-            );
+        // Check if the OTP is still valid
+        const isOtpValid = expirationTime > new Date().getTime();
+        console.log("isOtpValid ", isOtpValid);
+        // Use the value of isOtpValid to perform further actions, for example:
+        if (isOtpValid) {
+          console.log("OTP is still valid");
+          let updateOtp;
+          const options = { new: true };
 
-            const hashedPassword = bcrypt.hashSync(user.password, salt);
+          console.log(
+            "createdUser.services.password.bcrypt ",
+            userObj.services.password.bcrypt
+          );
 
-            if (userObj.type === "phoneNo") {
-              console.log("in phone");
-              updateOtp = {
-                $set: {
-                  "services.password.bcrypt": hashedPassword,
-                  phoneVerified: true,
-                },
-              };
-            } else if (userObj.type === "email") {
-              console.log("in email");
-              updateOtp = {
-                $set: {
-                  "services.password.bcrypt": hashedPassword,
-                  "emails.0.verified": true,
-                },
-              };
-            } else {
-              console.log("error in loginType");
-            }
+          const hashedPassword = bcrypt.hashSync(user.password, salt);
 
-            console.log("Original Password:", user.password);
-            console.log("Hashed Password:", hashedPassword);
-
-            const { result } = await users.updateOne(
-              { _id: userObj._id },
-              updateOtp,
-              options
-            );
-            return result.n > 0 ? true : false;
+          if (userObj.type === "phoneNo") {
+            console.log("in phone");
+            updateOtp = {
+              $set: {
+                "services.password.bcrypt": hashedPassword,
+                phoneVerified: true,
+              },
+            };
+          } else if (userObj.type === "email") {
+            console.log("in email");
+            updateOtp = {
+              $set: {
+                "services.password.bcrypt": hashedPassword,
+                "emails.0.verified": true,
+              },
+            };
           } else {
-            console.log("OTP has expired");
-            return false;
-            // Perform further actions for expired OTP
+            console.log("error in loginType");
           }
+
+          console.log("Original Password:", user.password);
+          console.log("Hashed Password:", hashedPassword);
+
+          const { result } = await users.updateOne(
+            { _id: userObj._id },
+            updateOtp,
+            options
+          );
+          return result.n > 0 ? true : false;
         } else {
-          throw new ReactionError("not-found", "Otp is incorrect");
+          console.log("OTP has expired");
+          return false;
+          // Perform further actions for expired OTP
         }
       } else {
-        throw new ReactionError("not-found", "Could not found user");
+        throw new ReactionError("not-found", "Otp is incorrect");
       }
-    } catch (err) {
-      console.log(err);
-      throw new ReactionError(
-        "server-error",
-        "Something went wrong.Please try again later."
-      );
+    } else {
+      throw new ReactionError("not-found", "Could not found user");
     }
   },
 
-  changePassword: async (
-    _,
-    { oldPassword, newPassword },
-    { user, injector }
-  ) => {
+  changePassword: async (_, context, { user, injector }) => {
+    let { oldPassword, newPassword } = context;
+
     if (!(user && user.id)) {
       throw new Error("Unauthorized");
     }
+
     const userId = user.id;
+
+    //checking if account is deleted or not
+    const checkedAccount = await context.mutations.deleteAccountCheck(context, {
+      userId,
+    });
+
     let responsePassword = await injector
       .get(password_1.AccountsPassword)
       .changePassword(userId, oldPassword, newPassword);

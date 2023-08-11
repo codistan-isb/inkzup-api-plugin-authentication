@@ -68,7 +68,7 @@ export async function sendEmailOTP(
 
   const dataForEmail = {
     // Reaction Information
-    contactEmail: "awahab1116@gmail.com",
+    contactEmail: "test@gmail.com",
     homepage: _.get(shop, "storefrontUrls.storefrontHomeUrl", null),
     copyrightDate: new Date().getFullYear(),
     legalName: _.get(shop, "addressBook[0].company"),
@@ -84,7 +84,7 @@ export async function sendEmailOTP(
     shopName: shop.name,
     // confirmationUrl: REACTION_IDENTITY_PUBLIC_VERIFY_EMAIL_URL.replace("TOKEN", token),
     confirmationUrl: otp,
-    userEmailAddress: "awahab1116@gmail.com",
+    userEmailAddress: "test@gmail.com",
   };
   const language =
     (account.profile && account.profile.language) || shop.language;
@@ -94,7 +94,7 @@ export async function sendEmailOTP(
     fromShop: shop,
     templateName: bodyTemplate,
     language,
-    to: "awahab1116@gmail.com",
+    to: email,
   });
 }
 
