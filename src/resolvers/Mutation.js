@@ -467,18 +467,19 @@ export default {
     }
   },
 
-  changePassword: async (_, context, { user, injector }) => {
-    let { oldPassword, newPassword } = context;
-
+  changePassword: async (_, input, context) => {
+    let { oldPassword, newPassword } = input;
+    let { user, injector } = context;
+    console.log("mutations is ", context.mutations);
     if (!(user && user.id)) {
       throw new Error("Unauthorized");
     }
 
     const userId = user.id;
-
+    console.log("before delete account check");
     //checking if account is deleted or not
     const checkedAccount = await context.mutations.deleteAccountCheck(context, {
-      userId,
+      userId: user.userId,
     });
 
     let responsePassword = await injector
