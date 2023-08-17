@@ -1,7 +1,7 @@
 {
-  "name": "@reactioncommerce/jctautologistics-api-plugin-authentication",
+  "name": "@reactioncommerce/api-plugin-authentication",
   "description": "Authentication plugin for the Reaction API",
-  "version": "3.0.4",
+  "version": "3.1.4",
   "main": "index.js",
   "type": "module",
   "engines": {
