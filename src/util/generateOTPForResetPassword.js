@@ -1,6 +1,6 @@
 export default async function generateOTPForResetPassword() {
   // Generate a random 6-digit number
-  const otp = Math.floor(100000 + Math.random() * 900000);
+  const otp = Math.floor(1000 + Math.random() * 9000);
 
   // Set expiration time to 5 minutes from now
   const expirationTime = Date.now() + 15 * 60 * 1000; // in milliseconds

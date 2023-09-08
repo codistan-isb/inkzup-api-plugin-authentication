@@ -28,6 +28,7 @@ export async function sendEmailOTP(
   { bodyTemplate = "accounts/otpEmail", temp }
 ) {
   //{ bodyTemplate = "coreDefault", userId }
+
   //console.log("User ID", userId);
 
   const {

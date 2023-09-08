@@ -15,6 +15,14 @@ extend input CreateUserInput {
   phoneVerified: Boolean = false
 }
 
+input UserProfileInput {
+  city: String
+  firstName: String
+  lastName: String
+  state: String
+  phone: String!
+}
+
 input VerifyUserOtpInput {
   userId: ID!
   otp: Int!
@@ -55,7 +63,10 @@ extend type Mutation {
   # checkUserExist(phone: String, email: String): Boolean
   # sendOTP(phone: String, email: String): Boolean
 
-  createUserWithOtp(user: CreateUserInput!): newUserResult
+  createUserWithOtp(
+    user: CreateUserInput!
+    profile: UserProfileInput!
+  ): newUserResult
   verifyOTPSignUp(user: VerifyUserOtpInput!): Boolean
   loginUser(user: LoginUserInput!): CreateUserResult
   resetPasswordOtp(user: ResetpasswordInput!): resetPasswordResult

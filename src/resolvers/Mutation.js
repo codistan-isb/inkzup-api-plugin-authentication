@@ -60,8 +60,7 @@ export default {
     };
   },
 
-  async createUserWithOtp(_, { user }, ctx) {
-    console.log("In create user with otp");
+  async createUserWithOtp(_, { user, profile }, ctx) {
     const { injector, infos, collections } = ctx;
     const accountsServer = injector.get(server_1.AccountsServer);
     const accountsPassword = injector.get(password_1.AccountsPassword);
@@ -120,10 +119,11 @@ export default {
         groups: [],
         name: null,
         profile: {
-          firstName: "here goes first name",
-          lastName: user.lastName,
-          dob: user.dob,
-          phone: user.username ? user.username : "",
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          state: profile.state,
+          city: profile.city,
+          phone: profile.phone,
         },
         shopId: null,
         state: "new",
@@ -280,6 +280,7 @@ export default {
     }
 
     if (userData.type === "email") {
+      console.log("login type is email");
       isVerified = userData.emails[0].verified;
       newObj = {
         user: {
@@ -298,6 +299,8 @@ export default {
         password: user.password,
       };
     }
+
+    console.log("userData", userData.emails);
 
     if (!isVerified) {
       throw new ReactionError(
