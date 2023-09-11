@@ -30,11 +30,13 @@ input VerifyUserOtpInput {
 
 type CreateUserResult {
   type: loginType
+  shopId: String
 }
 
 type newUserResult {
   userId: ID
   type: loginType
+  loginResult: LoginResult
 }
 
 type resetPasswordResult {

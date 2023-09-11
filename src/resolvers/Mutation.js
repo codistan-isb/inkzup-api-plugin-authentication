@@ -1,6 +1,7 @@
 import { generatePhoneOtp, verifyOTP } from "../util/otp.js";
 import bcrypt from "bcrypt";
 // import { verifyOTP } from "../util/otp.js";
+import encodeOpaqueId from "@reactioncommerce/api-utils/encodeOpaqueId.js";
 
 import password_1 from "@accounts/password";
 import server_1 from "@accounts/server";
@@ -312,10 +313,13 @@ export default {
     // When initializing AccountsServer we check that enableAutologin and ambiguousErrorMessages options
     // are not enabled at the same time
     const createdUser = await accountsServer.findUserById(userData._id);
+    const account = await Accounts.findOne({ _id: userData._id });
     console.log("create user is ", createdUser);
     console.log("password is ", createdUser.services.password.bcrypt);
     createdUser.services.password.bcrypt = user.password;
     console.log("new create user is ", createdUser);
+
+    console.log("account is ", account)
     // If we are here - user must be created successfully
     // Explicitly saying this to Typescript compiler
     // const loginResult = await accountsServer.loginWithUser(createdUser, infos);
@@ -326,9 +330,14 @@ export default {
       .loginWithService("password", newObj, infos);
 
     console.log("authenticated is ", authenticated);
+    console.log("created user is", createdUser);
+    let shopId = account?.adminUIShopIds ? account.adminUIShopIds[0] : "";
+
+    if (shopId) shopId = encodeOpaqueId("reaction/shop", shopId);
 
     return {
       loginResult: authenticated,
+      shopId,
     };
   },
 
