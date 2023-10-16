@@ -6,7 +6,7 @@ export default async function generateOTPForResetPassword() {
 
   // Set expiration time to 5 minutes from now
   const expirationTime = Date.now() + 15 * 60 * 1000; // in milliseconds
-  console.log("OTP: ", otp);
+  console.log("OTP new is 1234: ", otp);
   console.log("Expiration Time: ", expirationTime);
   return { otp, expirationTime };
 }
