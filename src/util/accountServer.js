@@ -21,7 +21,7 @@ export default async (app) => {
   const accountsMongo = new Mongo(db, {
     convertUserIdToMongoObjectId: false,
     convertSessionIdToMongoObjectId: false,
-    idProvider: () => mongoose.Types.ObjectId().toString()
+    idProvider: () => mongoose.Types.ObjectId().toString(),
   });
 
   const password = new AccountsPassword({
@@ -39,11 +39,11 @@ export default async (app) => {
             const usersCollection = accountsMongo.db.collection("users");
 
             const UsernameExist = await usersCollection.findOne({
-              username: legacyUsername
+              username: legacyUsername,
             });
 
             const UserEmailExist = await usersCollection.findOne({
-              "email.address": email
+              "email.address": email,
             });
 
             console.log("user email already exists ", UserEmailExist);
@@ -58,12 +58,12 @@ export default async (app) => {
       }
       userObj = {
         ...user,
-        username: username === "insecure" ? user.legacyUsername : user.username
+        username: username === "insecure" ? user.legacyUsername : user.username,
       };
 
       // We specify all the fields that can be inserted in the database
       return userObj;
-    }
+    },
   });
 
   accountsServer = new AccountsServer(
@@ -72,6 +72,14 @@ export default async (app) => {
       tokenSecret: TOKEN_SECRET,
       db: accountsMongo,
       enableAutologin: true,
+      tokenConfigs: {
+        accessToken: {
+          expiresIn: "30d",
+        },
+        refreshToken: {
+          expiresIn: "90d",
+        },
+      },
       ambiguousErrorMessages: false,
       sendMail: async ({ to, text }) => {
         const query = text.split("/");
@@ -79,19 +87,19 @@ export default async (app) => {
         const url = `${STORE_URL}/?resetToken=${token}`;
         await context.mutations.sendResetAccountPasswordEmail(context, {
           email: to,
-          url
+          url,
         });
       },
       emailTemplates: {
         resetPassword: {
           from: null,
           // hack to pass the URL to sendMail function
-          text: (user, url) => url
-        }
-      }
+          text: (user, url) => url,
+        },
+      },
     },
     {
-      password
+      password,
     }
   );
   accountsGraphQL = AccountsModule.forRoot({ accountsServer });
