@@ -122,7 +122,7 @@ export async function generatePhoneOtp(context, number, userId) {
   }
   console.log("User Response :- ", UserData._id);
   const account = await Accounts.findOne({ _id: UserData._id });
-  console.log("Account Resonse :-", account);
+  console.log("Account Response :-", account);
   if (!account) throw new ReactionError("not-found", "Account not found");
 
   const updateAccountResult = await users.updateOne(

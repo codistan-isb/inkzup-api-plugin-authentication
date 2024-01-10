@@ -12,7 +12,11 @@ const genericOtpFunc = async (createdUser, ctx) => {
   let data;
   if (createdUser.type == "phoneNo" && createdUser?.username) {
     console.log("here");
-    data = await generatePhoneOtp(ctx, createdUser.username, userId);
+    data = await generatePhoneOtp(
+      ctx,
+      createdUser.username,
+      createdUser.userId
+    );
     console.log("Phone otp response ", data);
   }
   if (createdUser.type == "email" && createdUser.emails.length) {
@@ -82,6 +86,8 @@ export default {
 
     try {
       userId = await accountsPassword.createUser(user);
+
+      console.log("user id is ", userId);
     } catch (error) {
       // If ambiguousErrorMessages is true we obfuscate the email or username already exist error
       // to prevent user enumeration during user creation
@@ -101,15 +107,12 @@ export default {
       };
     }
 
-    const adminCount = await Accounts.findOne({
-      _id: userId,
-    });
-    console.log("adminCount", adminCount);
     if (userId) {
       console.log("user", user);
       const account = {
         _id: userId,
         acceptsMarketing: false,
+        userRole: user.userRole,
         emails: [
           {
             address: user.email,
@@ -122,9 +125,6 @@ export default {
         profile: {
           firstName: profile.firstName,
           lastName: profile.lastName,
-          state: profile.state,
-          city: profile.city,
-          phone: profile.phone,
         },
         shopId: null,
         state: "new",
@@ -138,6 +138,7 @@ export default {
     }
     // When initializing AccountsServer we check that enableAutologin and ambiguousErrorMessages options
     // are not enabled at the same time
+
     const createdUser = await accountsServer.findUserById(userId);
     console.log("create user is ", createdUser);
     // If we are here - user must be created successfully
@@ -158,11 +159,13 @@ export default {
     // const { serviceName, params } = args;
     const { injector, infos, collections } = ctx;
     const { users, Accounts } = collections;
+    const accountsServer = injector.get(server_1.AccountsServer);
+    const accountsPassword = injector.get(password_1.AccountsPassword);
 
     //checking if account is deleted or not
-    const checkedAccount = await ctx.mutations.deleteAccountCheck(ctx, {
-      userId: user.userId,
-    });
+    // const checkedAccount = await ctx.mutations.deleteAccountCheck(ctx, {
+    //   userId: user.userId,
+    // });
 
     if (!user.userId) {
       throw new ReactionError(
@@ -214,7 +217,15 @@ export default {
 
             console.log("Accounts Result is ", accountResult);
 
-            return result.n;
+            const createdUser = await accountsServer.findUserById(user.userId);
+            const loginResult = await accountsServer.loginWithUser(
+              createdUser,
+              infos
+            );
+
+            console.log("loginResult is ", loginResult);
+
+            return loginResult;
           } else {
             console.log("OTP has expired");
             return false;
@@ -227,7 +238,7 @@ export default {
         throw new ReactionError("not-found", "Could not found user");
       }
     } catch (err) {
-      console.log(err);
+      console.log("error in catch is", err);
       throw new ReactionError(
         "server-error",
         "Something went wrong.Please try again later."
@@ -268,9 +279,9 @@ export default {
     }
 
     //checking if account is deleted or not
-    const checkedAccount = await ctx.mutations.deleteAccountCheck(ctx, {
-      userId: userData._id,
-    });
+    // const checkedAccount = await ctx.mutations.deleteAccountCheck(ctx, {
+    //   userId: userData._id,
+    // });
 
     if (!accountsServer.options.enableAutologin) {
       return {
@@ -319,7 +330,7 @@ export default {
     createdUser.services.password.bcrypt = user.password;
     console.log("new create user is ", createdUser);
 
-    console.log("account is ", account)
+    console.log("account is ", account);
     // If we are here - user must be created successfully
     // Explicitly saying this to Typescript compiler
     // const loginResult = await accountsServer.loginWithUser(createdUser, infos);
@@ -339,6 +350,28 @@ export default {
       loginResult: authenticated,
       shopId,
     };
+  },
+
+  async loginUserWithOtp(_, { phoneOrEmail }, ctx) {
+    const { collections } = ctx;
+    const { users } = collections;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isEmail = emailRegex.test(phoneOrEmail);
+    let selector = {};
+    if (isEmail) {
+      selector = { "emails.0.address": phoneOrEmail };
+    } else {
+      selector = { username: `p${phoneOrEmail}` };
+    }
+
+    const user = await users.findOne(selector);
+    if (!user) {
+      throw new ReactionError("not-found", "Invalid email or phone number");
+    }
+
+    console.log("useris", user);
+
+    return user._id;
   },
 
   async resetPasswordOtp(_, { user }, ctx) {

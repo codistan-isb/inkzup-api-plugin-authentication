@@ -8,23 +8,27 @@ extend type Account {
   type: loginType
 }
 
+enum UserRoleEnum {
+  artist
+  client
+}
+
 extend input CreateUserInput {
   username: String = "insecure"
   legacyUsername: String
   type: loginType
   phoneVerified: Boolean = false
+  userRole: UserRoleEnum!
 }
 
 input UserProfileInput {
-  city: String
   firstName: String
   lastName: String
-  state: String
-  phone: String!
 }
 
 input VerifyUserOtpInput {
   userId: ID!
+
   otp: Int!
 }
 
@@ -69,11 +73,13 @@ extend type Mutation {
     user: CreateUserInput!
     profile: UserProfileInput!
   ): newUserResult
-  verifyOTPSignUp(user: VerifyUserOtpInput!): Boolean
+  verifyOTPSignUp(user: VerifyUserOtpInput!): LoginResult
   loginUser(user: LoginUserInput!): CreateUserResult
   resetPasswordOtp(user: ResetpasswordInput!): resetPasswordResult
   resetPasswordOtpVerify(user: resetPasswordOtpVerifyInput!): Boolean
   # verifyOTP(phone: String, otp: String): verifyOTPResponse
+
+  loginUserWithOtp(phoneOrEmail: String!): String
 
   # authenticateWithOTP(
   #   serviceName: String!
